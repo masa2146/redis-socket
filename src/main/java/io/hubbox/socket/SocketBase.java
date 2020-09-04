@@ -2,6 +2,7 @@ package io.hubbox.socket;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.hubbox.exceptions.SendMessageException;
 import io.hubbox.listener.EventListener;
 import io.hubbox.listener.MessageListener;
 import io.hubbox.manager.ClientListenerManager;
@@ -15,22 +16,24 @@ import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ *
+ */
 public abstract class SocketBase implements MessageListener {
 
 
-    private Map<String, ClientListenerManager> managerMap = new HashMap<>();
-    RedisClient redisClient;
-    StatefulRedisPubSubConnection<String, String> pubConnection;
+    private Map<String, ClientListenerManager> managerMap;
+    private RedisClient redisClient;
     RedisPubSubCommands<String, String> publisherCommand;
     RedisCommands<String, String> commands;
 
     SocketBase(RedisClient redisClient) {
-        try{
+        try {
             this.redisClient = redisClient;
-            pubConnection = redisClient.connectPubSub();
-            commands = redisClient.connect().sync();
-            publisherCommand = pubConnection.sync();
-        }catch (RedisConnectionException e){
+            this.managerMap = new HashMap<>();
+            this.commands = redisClient.connect().sync();
+            this.publisherCommand = redisClient.connectPubSub().sync();
+        } catch (RedisConnectionException e) {
             // throws exception
         }
     }
@@ -60,31 +63,27 @@ public abstract class SocketBase implements MessageListener {
     }
 
     @Override
-    public <T> void sendMessage(String channel, Class<T> message) {
+    public <T> void sendMessage(String channel, Class<T> message) throws SendMessageException {
         try {
             ObjectMapper mapper = new ObjectMapper();
             publisherCommand.publish(channel, mapper.writeValueAsString(message));
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            throw new SendMessageException("Your message only contains fields like that String, Integer, Float etc..." +
+                    "\nMaybe your message class contain incorrect fields.");
             // throw exception
             // The class must contain only data must not specific function.
         } catch (NullPointerException e) {
-            e.printStackTrace();
-            // throw exception
-            // You can't call sendMessage function without call init. Before call init function
-        }
-    }
-    @Override
-    public void sendMessage(String channel, String message) {
-        try {
-            publisherCommand.publish(channel, message);
-        } catch (NullPointerException e) {
-            e.printStackTrace();
+            throw new SendMessageException("Make sure RedisSocketClient or RedisSocketServer not NULL or maybe your message is NULL");
             // throw exception
             // You can't call sendMessage function without call init. Before call init function
         }
     }
 
+    @Override
+    public void sendMessage(String channel, String message) throws SendMessageException {
+        publisherCommand.publish(channel, message);
+
+    }
 
 
     public abstract void start();

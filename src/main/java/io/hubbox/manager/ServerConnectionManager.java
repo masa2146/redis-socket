@@ -10,31 +10,27 @@ import io.lettuce.core.RedisException;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.pubsub.RedisPubSubListener;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
-import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
 
 import java.io.IOException;
 
 public class ServerConnectionManager {
 
-    private RedisClient redisClient;
     private RedisCommands<String, String> commands;
-    RedisPubSubCommands<String, String> publisherCommand;
     private StatefulRedisPubSubConnection<String, String> subConnection;
     private ClientDisconnectListener disconnectListener;
 
     private ObjectMapper objectMapper;
 
-    public ServerConnectionManager(RedisClient redisClient, RedisCommands<String, String> commands, RedisPubSubCommands<String, String> publisherCommand) {
-        this.redisClient = redisClient;
+    public ServerConnectionManager(RedisClient redisClient, RedisCommands<String, String> commands) {
         this.commands = commands;
         subConnection = redisClient.connectPubSub();
         objectMapper = new ObjectMapper();
     }
 
     /**
-     * When client connected to server, server send message to {@link SocketInfo.EVENT_CONNECTED} channel.
-     * The message contains {@link io.hubbox.client.ClientData}. And it triggers to {@link ClientConnectListener.onConnect()} function.
-     * Also this function client which  has been connected, add to hash set which is {@link SocketInfo.ALL_CLIENT} key
+     * When client connected to server, server send message to SocketInfo.EVENT_CONNECTED channel.
+     * The message contains {@link io.hubbox.client.ClientData}. And it triggers to ClientConnectListener.onConnect() function.
+     * Also this function client which  has been connected, add to hash set which is SocketInfo.ALL_CLIENT key
      */
     public void listenConnectedClients(ClientConnectListener connectListener) {
         subConnection.addListener(new RedisPubSubListener<String, String>() {
@@ -105,8 +101,8 @@ public class ServerConnectionManager {
 
     /**
      * Connected clients id keep with key in hash map of the Redis. Get all keys and check status field  value of the key.
-     * If the status filed is zero({@link ClientInfo.NOT_OK}) then this client is disconnected.
-     * It sets one({@link ClientInfo.OK}) value to status field in the key on client side if client connected.
+     * If the status filed is zero(ClientInfo.NOT_OK) then this client is disconnected.
+     * It sets one(ClientInfo.OK) value to status field in the key on client side if client connected.
      */
     private synchronized void statusControl() throws IOException {
         try {

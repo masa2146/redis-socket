@@ -16,16 +16,6 @@ public class SocketClientTest {
             public void onMessage(String channel, String message) {
                 System.out.println("CHANNEL: " + channel + " Message: " + message);
             }
-
-            @Override
-            public void onAddChannel(String channel, long l) {
-
-            }
-
-            @Override
-            public void onRemoveChannel(String channel, long l) {
-
-            }
         });
 
         client.addConnectListener(new ServerConnectListener() {
