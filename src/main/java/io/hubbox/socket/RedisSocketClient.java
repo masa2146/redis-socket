@@ -6,6 +6,7 @@ import io.hubbox.listener.ServerConnectListener;
 import io.hubbox.listener.ServerDisconnectListener;
 import io.hubbox.listener.ServerListener;
 import io.hubbox.manager.ClientConnectionManager;
+import io.hubbox.manager.ClientInfo;
 import io.lettuce.core.RedisClient;
 
 public class RedisSocketClient extends SocketBase implements ServerListener {
@@ -38,7 +39,13 @@ public class RedisSocketClient extends SocketBase implements ServerListener {
     public void start() {
         new Thread(() -> {
             while (true) {
+                commands.hset(redisIOClient.getClientData().getSessionId(), ClientInfo.STATUS.getValue(), ClientInfo.OK.getValue());
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-        }).run();
+        }).start();
     }
 }

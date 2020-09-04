@@ -6,4 +6,6 @@ package io.hubbox.listener;
 public interface ClientListener {
 
     void addConnectListener(ClientConnectListener connectListener);
+
+    void addDisconnectedListener(ClientDisconnectListener disconnectListener);
 }

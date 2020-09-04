@@ -17,10 +17,6 @@ import java.util.Map;
 
 public abstract class SocketBase implements MessageListener {
 
-    public static final String EVENT_STATUS = "status";
-    public static final String EVENT_CONNECTED = "onConnected";
-    public static final String EVENT_DISCONNECTED = "onDisconnected";
-
 
     private Map<String, ClientListenerManager> managerMap = new HashMap<>();
     RedisClient redisClient;

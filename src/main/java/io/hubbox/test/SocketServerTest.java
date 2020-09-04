@@ -1,20 +1,31 @@
 package io.hubbox.test;
 
+import io.hubbox.client.RedisIOClient;
+import io.hubbox.listener.ClientConnectListener;
 import io.hubbox.listener.EventListener;
-import io.hubbox.listener.ServerConnectListener;
-import io.hubbox.listener.ServerDisconnectListener;
-import io.hubbox.socket.RedisSocketClient;
+import io.hubbox.socket.RedisSocketServer;
 import io.lettuce.core.RedisClient;
 
+/**
+ * @author fatih
+ */
 public class SocketServerTest {
+
     public static void main(String[] args) {
         RedisClient redisClient = RedisClient.create("redis://192.168.143.192:6380");
-        RedisSocketClient client = new RedisSocketClient(redisClient);
+        RedisSocketServer server = new RedisSocketServer(redisClient);
 
-        client.addEventListener("marmara", new EventListener() {
+        server.addConnectListener(new ClientConnectListener() {
+            @Override
+            public void onConnect(RedisIOClient client) {
+                System.out.println("Client connected. Client id is " + client.getClientData().getSessionId());
+            }
+        });
+
+        server.addEventListener("message", new EventListener() {
             @Override
             public void onMessage(String channel, String message) {
-                System.out.println("CHANNEL: " + channel + " Message: " + message);
+                System.out.println("SERVER RECEIVED THE MESSAGE: " + message);
             }
 
             @Override
@@ -28,20 +39,7 @@ public class SocketServerTest {
             }
         });
 
-        client.addConnectListener(new ServerConnectListener() {
-            @Override
-            public void onConnectedToServer() {
-                System.out.println("Client connected");
-            }
-        });
-
-        client.addDisconnectListener(new ServerDisconnectListener() {
-            @Override
-            public void onDisconnectedServer() {
-
-            }
-        });
-
-        client.start();
+        server.start();
     }
+
 }

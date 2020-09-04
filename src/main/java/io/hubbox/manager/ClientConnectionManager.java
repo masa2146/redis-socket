@@ -6,6 +6,7 @@ import io.hubbox.client.RedisIOClient;
 import io.hubbox.listener.ServerConnectListener;
 import io.hubbox.listener.ServerDisconnectListener;
 import io.hubbox.socket.SocketBase;
+import io.hubbox.socket.SocketInfo;
 import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisConnectionStateListener;
@@ -71,9 +72,9 @@ public class ClientConnectionManager {
 
             }
         });
-        this.subConnection.sync().subscribe(SocketBase.EVENT_CONNECTED + "/" + client.getClientData().getSessionId());
+        this.subConnection.sync().subscribe(SocketInfo.EVENT_CONNECTED.getValue() + "/" + client.getClientData().getSessionId());
 
-        publisherCommand.publish(SocketBase.EVENT_CONNECTED, objectMapper.writeValueAsString(client.getClientData()));
+        publisherCommand.publish(SocketInfo.EVENT_CONNECTED.getValue(), objectMapper.writeValueAsString(client.getClientData()));
     }
 
     /**
