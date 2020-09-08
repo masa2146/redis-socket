@@ -16,9 +16,8 @@ public class RedisSocketClient extends SocketBase implements ServerListener {
 
     public RedisSocketClient(RedisClient redisClient) {
         super(redisClient);
-        redisIOClient = new RedisIOClient();
+        redisIOClient = new RedisIOClient(publisherCommand);
         connectionManager = new ClientConnectionManager(redisClient, redisIOClient, publisherCommand);
-        System.out.println("RedisSocketClient constructor");
     }
 
     @Override

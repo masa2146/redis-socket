@@ -5,9 +5,10 @@ package io.hubbox.listener;
  */
 public interface EventListener {
 
+    /**
+     * When message received, this function will trigger.
+     * @param message is received data
+     * @param channel Message received via this channel.
+     */
     void onMessage(String channel, String message);
-
-    void onAddChannel(String channel, long l);
-
-    void onRemoveChannel(String channel, long l);
 }

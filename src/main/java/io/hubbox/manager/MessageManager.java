@@ -3,6 +3,11 @@ package io.hubbox.manager;
 import io.hubbox.listener.EventListener;
 import io.lettuce.core.pubsub.RedisPubSubListener;
 
+/**
+ * @author fatih
+ * This class receive message from Redis PubSub channels.
+ * The recevied messages are sent via {@link EventListener}
+ */
 public class MessageManager implements RedisPubSubListener<String, String> {
 
     private EventListener eventListener;
@@ -24,7 +29,6 @@ public class MessageManager implements RedisPubSubListener<String, String> {
 
     @Override
     public void subscribed(String s, long l) {
-        eventListener.onAddChannel(s, l);
     }
 
     @Override
@@ -34,7 +38,6 @@ public class MessageManager implements RedisPubSubListener<String, String> {
 
     @Override
     public void unsubscribed(String s, long l) {
-        eventListener.onRemoveChannel(s, l);
     }
 
     @Override

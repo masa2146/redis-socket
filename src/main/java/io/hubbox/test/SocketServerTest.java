@@ -1,7 +1,9 @@
 package io.hubbox.test;
 
 import io.hubbox.client.RedisIOClient;
+import io.hubbox.exceptions.SendMessageException;
 import io.hubbox.listener.ClientConnectListener;
+import io.hubbox.listener.ClientDisconnectListener;
 import io.hubbox.listener.EventListener;
 import io.hubbox.socket.RedisSocketServer;
 import io.lettuce.core.RedisClient;
@@ -22,22 +24,25 @@ public class SocketServerTest {
             }
         });
 
+        server.addDisconnectedListener(new ClientDisconnectListener() {
+            @Override
+            public void onDisconnect(RedisIOClient client) {
+
+            }
+        });
+
         server.addEventListener("message", new EventListener() {
             @Override
             public void onMessage(String channel, String message) {
                 System.out.println("SERVER RECEIVED THE MESSAGE: " + message);
             }
-
-            @Override
-            public void onAddChannel(String channel, long l) {
-
-            }
-
-            @Override
-            public void onRemoveChannel(String channel, long l) {
-
-            }
         });
+
+        try {
+            server.sendMessage("asd","asd");
+        } catch (SendMessageException e) {
+            e.printStackTrace();
+        }
 
         server.start();
     }

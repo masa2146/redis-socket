@@ -21,13 +21,14 @@ public class RedisSocketServer extends SocketBase implements ClientListener {
 
     public RedisSocketServer(RedisClient redisClient) {
         super(redisClient);
-        connectionManager = new ServerConnectionManager(redisClient, commands, publisherCommand);
+        connectionManager = new ServerConnectionManager(redisClient, commands);
         allClients = new ArrayList<>();
     }
 
     @Override
     public void addConnectListener(ClientConnectListener connectListener) {
         connectionManager.listenConnectedClients(connectListener);
+
     }
 
     @Override
@@ -42,7 +43,7 @@ public class RedisSocketServer extends SocketBase implements ClientListener {
             try {
                 allClients.add(mapper.readValue(value, RedisIOClient.class));
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Somethings went wrong when get all clients");
             }
         });
         return allClients;

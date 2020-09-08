@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hubbox.client.RedisIOClient;
 import io.hubbox.listener.ServerConnectListener;
 import io.hubbox.listener.ServerDisconnectListener;
-import io.hubbox.socket.SocketBase;
 import io.hubbox.socket.SocketInfo;
 import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisClient;
