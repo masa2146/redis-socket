@@ -16,8 +16,8 @@ public class ClientListenerManager {
     private StatefulRedisPubSubConnection<String, String> pubSubConnection;
 
     public void removeEvent(String channel) {
-        pubSubConnection.sync().unsubscribe(channel);
-        pubSubConnection.removeListener(messageManager);
+        this.pubSubConnection.sync().unsubscribe(channel);
+        this.pubSubConnection.removeListener(this.messageManager);
     }
 
 }
