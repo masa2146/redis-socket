@@ -4,7 +4,7 @@ import io.hubbox.exceptions.SendMessageException;
 
 public interface MessageListener {
 
-    void addEventListener(String channel, EventListener eventListener);
+    void addEventListener(EventListener eventListener, String... channel);
 
     void removeEventListener(String channel);
 

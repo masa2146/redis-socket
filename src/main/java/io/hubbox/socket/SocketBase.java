@@ -12,6 +12,7 @@ import io.lettuce.core.RedisConnectionException;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
+import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,8 +24,9 @@ public abstract class SocketBase implements MessageListener {
 
 
     private Map<String, ClientListenerManager> managerMap;
-    private RedisClient redisClient;
+    RedisClient redisClient;
     RedisPubSubCommands<String, String> publisherCommand;
+    @Getter
     RedisCommands<String, String> commands;
 
     SocketBase(RedisClient redisClient) {
@@ -39,15 +41,17 @@ public abstract class SocketBase implements MessageListener {
     }
 
     @Override
-    public void addEventListener(String channel, EventListener eventListener) {
+    public void addEventListener(EventListener eventListener, String... channels) {
         try {
             MessageManager messageManager = new MessageManager(eventListener);
             StatefulRedisPubSubConnection<String, String> pubSubListener = redisClient.connectPubSub();
 
             pubSubListener.addListener(messageManager);
-            pubSubListener.sync().subscribe(channel);
-
-            managerMap.put(channel, new ClientListenerManager(messageManager, pubSubListener));
+            pubSubListener.sync().subscribe(channels);
+            ClientListenerManager clientListenerManager = new ClientListenerManager(messageManager, pubSubListener);
+            for (String channel : channels) {
+                managerMap.put(channel, clientListenerManager);
+            }
 
         } catch (NullPointerException e) {
             e.printStackTrace();
@@ -80,11 +84,10 @@ public abstract class SocketBase implements MessageListener {
     }
 
     @Override
-    public void sendMessage(String channel, String message) throws SendMessageException {
+    public void sendMessage(String channel, String message) {
         publisherCommand.publish(channel, message);
 
     }
-
 
     public abstract void start();
 }

@@ -28,6 +28,7 @@ public class ClientConnectionManager {
 
     public ClientConnectionManager(RedisClient redisClient, RedisIOClient client, RedisPubSubCommands<String, String> publisherCommand) {
         this.redisClient = redisClient;
+        this.objectMapper = new ObjectMapper();
         this.client = client;
         this.publisherCommand = publisherCommand;
         subConnection = redisClient.connectPubSub();
@@ -71,9 +72,9 @@ public class ClientConnectionManager {
 
             }
         });
-        this.subConnection.sync().subscribe(SocketInfo.EVENT_CONNECTED.getValue() + "/" + client.getClientData().getSessionId());
+        this.subConnection.sync().subscribe(SocketInfo.EVENT_CONNECTED.name() + "/" + client.getClientData().getSessionId());
 
-        publisherCommand.publish(SocketInfo.EVENT_CONNECTED.getValue(), objectMapper.writeValueAsString(client.getClientData()));
+        publisherCommand.publish(SocketInfo.EVENT_CONNECTED.name(), objectMapper.writeValueAsString(client.getClientData()));
     }
 
     /**

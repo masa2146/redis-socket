@@ -9,7 +9,7 @@ public class BaseIOClient {
     private ClientData clientData;
 
     BaseIOClient() {
-        clientData = new ClientData();
+        this.clientData = new ClientData();
     }
 
     public void sendMessage(String channel, String message){
