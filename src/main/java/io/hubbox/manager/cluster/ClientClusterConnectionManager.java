@@ -1,4 +1,4 @@
-package io.hubbox.manager;
+package io.hubbox.manager.cluster;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,31 +9,33 @@ import io.hubbox.socket.SocketInfo;
 import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisConnectionStateListener;
+import io.lettuce.core.cluster.RedisClusterClient;
+import io.lettuce.core.cluster.pubsub.StatefulRedisClusterPubSubConnection;
+import io.lettuce.core.cluster.pubsub.api.sync.RedisClusterPubSubCommands;
 import io.lettuce.core.pubsub.RedisPubSubListener;
-import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
 
 /**
+ * @author fatih
  * This class controls the client connect and disconnect to the server.
  * Run on client side.
  */
-public class ClientConnectionManager {
+public class ClientClusterConnectionManager {
 
-    private RedisClient redisClient;
+    private RedisClusterClient redisClient;
     private RedisIOClient client;
-    private RedisPubSubCommands<String, String> publisherCommand;
+    private RedisClusterPubSubCommands<String, String> publisherCommand;
 
     private ObjectMapper objectMapper;
-    private StatefulRedisPubSubConnection<String, String> subConnection;
+    private StatefulRedisClusterPubSubConnection<String, String> subConnection;
 
-    public ClientConnectionManager(RedisClient redisClient, RedisIOClient client, RedisPubSubCommands<String, String> publisherCommand) {
+    public ClientClusterConnectionManager(RedisClusterClient redisClient, RedisIOClient client, RedisClusterPubSubCommands<String, String> publisherCommand) {
         this.redisClient = redisClient;
         this.objectMapper = new ObjectMapper();
         this.client = client;
         this.publisherCommand = publisherCommand;
         subConnection = redisClient.connectPubSub();
     }
-
 
     /**
      * The function listens to 'onConnected/<ClientId>' channel.

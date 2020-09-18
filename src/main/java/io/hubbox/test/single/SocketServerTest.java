@@ -1,10 +1,9 @@
-package io.hubbox.test;
+package io.hubbox.test.single;
 
 import io.hubbox.client.RedisIOClient;
-import io.hubbox.exceptions.SendMessageException;
 import io.hubbox.listener.ClientDisconnectListener;
 import io.hubbox.listener.EventListener;
-import io.hubbox.socket.RedisSocketServer;
+import io.hubbox.socket.single.RedisSocketServer;
 import io.lettuce.core.RedisClient;
 
 import java.util.Scanner;

@@ -1,4 +1,4 @@
-package io.hubbox.socket;
+package io.hubbox.socket.cluster;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,24 +7,26 @@ import io.hubbox.listener.EventListener;
 import io.hubbox.listener.ServerConnectListener;
 import io.hubbox.listener.ServerDisconnectListener;
 import io.hubbox.listener.ServerListener;
-import io.hubbox.manager.ClientConnectionManager;
 import io.hubbox.manager.ClientInfo;
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.pubsub.RedisPubSubListener;
+import io.hubbox.manager.cluster.ClientClusterConnectionManager;
+import io.lettuce.core.cluster.RedisClusterClient;
 import lombok.Getter;
 
-public class RedisSocketClient extends SocketBase implements ServerListener {
+/**
+ * @author fatih
+ */
+public class RedisClusterSocketClient extends SocketClusterBase implements ServerListener {
 
-    private ClientConnectionManager connectionManager;
+    private ClientClusterConnectionManager connectionManager;
     @Getter
     private RedisIOClient redisIOClient;
     private ObjectMapper mapper;
 
-    public RedisSocketClient(RedisClient redisClient) {
+    public RedisClusterSocketClient(RedisClusterClient redisClient) {
         super(redisClient);
         redisIOClient = new RedisIOClient(redisClient);
         mapper = new ObjectMapper();
-        connectionManager = new ClientConnectionManager(redisClient, redisIOClient, publisherCommand);
+        connectionManager = new ClientClusterConnectionManager(redisClient, redisIOClient, publisherCommand);
     }
 
     @Override

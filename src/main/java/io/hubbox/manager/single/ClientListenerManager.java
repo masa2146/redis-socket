@@ -1,5 +1,6 @@
-package io.hubbox.manager;
+package io.hubbox.manager.single;
 
+import io.hubbox.manager.MessageManager;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import lombok.AllArgsConstructor;
 import lombok.ToString;

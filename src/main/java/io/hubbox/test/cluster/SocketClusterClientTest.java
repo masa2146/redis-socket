@@ -1,18 +1,23 @@
-package io.hubbox.test;
+package io.hubbox.test.cluster;
 
-import io.hubbox.exceptions.SendMessageException;
 import io.hubbox.listener.EventListener;
 import io.hubbox.listener.ServerConnectListener;
 import io.hubbox.listener.ServerDisconnectListener;
-import io.hubbox.socket.RedisSocketClient;
+import io.hubbox.socket.cluster.RedisClusterSocketClient;
+import io.hubbox.socket.single.RedisSocketClient;
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.cluster.RedisClusterClient;
 
 import java.util.Scanner;
 
-public class SocketClientTest {
+/**
+ * @author fatih
+ */
+public class SocketClusterClientTest {
+
     public static void main(String[] args) {
-        RedisClient redisClient = RedisClient.create("redis://192.168.143.192:6380");
-        RedisSocketClient client = new RedisSocketClient(redisClient);
+        RedisClusterClient redisClient = RedisClusterClient.create("redis://192.168.143.192:6380");
+        RedisClusterSocketClient client = new RedisClusterSocketClient(redisClient);
 
 
         client.addConnectListener(new ServerConnectListener() {

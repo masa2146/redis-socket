@@ -1,22 +1,16 @@
-package io.hubbox.socket;
+package io.hubbox.socket.single;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hubbox.client.ClientData;
-import io.hubbox.client.RedisIOClient;
 import io.hubbox.listener.ClientConnectListener;
 import io.hubbox.listener.ClientDisconnectListener;
 import io.hubbox.listener.ClientListener;
-import io.hubbox.manager.ServerConnectionManager;
-import io.lettuce.core.KillArgs;
+import io.hubbox.manager.single.ServerConnectionManager;
+import io.hubbox.socket.SocketInfo;
 import io.lettuce.core.RedisClient;
-import io.lettuce.core.ScriptOutputType;
-import io.lettuce.core.UnblockType;
-import io.lettuce.core.protocol.CommandType;
 
 import java.io.IOException;
-import java.security.Key;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +29,11 @@ public class RedisSocketServer extends SocketBase implements ClientListener {
     @Override
     public void addConnectListener(ClientConnectListener connectListener) {
         connectionManager.listenConnectedClients(connectListener);
+        try {
+            connectionManager.manualConnectionControl(connectListener);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

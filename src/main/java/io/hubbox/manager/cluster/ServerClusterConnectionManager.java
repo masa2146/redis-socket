@@ -1,30 +1,37 @@
-package io.hubbox.manager;
+package io.hubbox.manager.cluster;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hubbox.client.ClientData;
 import io.hubbox.client.RedisIOClient;
 import io.hubbox.listener.ClientConnectListener;
 import io.hubbox.listener.ClientDisconnectListener;
+import io.hubbox.manager.ClientInfo;
 import io.hubbox.socket.SocketInfo;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisException;
 import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.cluster.RedisClusterClient;
+import io.lettuce.core.cluster.api.sync.RedisClusterCommands;
+import io.lettuce.core.cluster.pubsub.StatefulRedisClusterPubSubConnection;
 import io.lettuce.core.pubsub.RedisPubSubListener;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 
 import java.io.IOException;
 
-public class ServerConnectionManager {
+/**
+ * @author fatih
+ */
+public class ServerClusterConnectionManager {
 
-    private RedisCommands<String, String> commands;
-    private StatefulRedisPubSubConnection<String, String> subConnection;
-    private StatefulRedisPubSubConnection<String, String> pubConnection;
-    private RedisClient redisClient;
+    private RedisClusterClient redisClient;
+    private RedisClusterCommands<String, String> commands;
+    private StatefulRedisClusterPubSubConnection<String, String> subConnection;
+    private StatefulRedisClusterPubSubConnection<String, String> pubConnection;
     private ClientDisconnectListener disconnectListener;
 
     private ObjectMapper objectMapper;
 
-    public ServerConnectionManager(RedisClient redisClient, RedisCommands<String, String> commands) {
+    public ServerClusterConnectionManager(RedisClusterClient redisClient, RedisClusterCommands<String, String> commands) {
         this.commands = commands;
         this.redisClient = redisClient;
         subConnection = redisClient.connectPubSub();
@@ -85,6 +92,23 @@ public class ServerConnectionManager {
 
     public void listenDisconnectClients(ClientDisconnectListener disconnectListener) {
         this.disconnectListener = disconnectListener;
+    }
+
+    public void manualConnectionControl(ClientConnectListener connectListener) throws IOException {
+        for (String key : commands.keys("*")){
+            if (commands.hgetall(key) != null){
+                if (commands.hget(key, ClientInfo.STATUS.getValue()) != null){
+                    if (commands.hget(key, ClientInfo.STATUS.getValue()).equals(ClientInfo.OK.getValue())){
+                        if (commands.hget(key, ClientInfo.INFO.getValue()) != null){
+                            ClientData clientData = objectMapper.readValue(commands.hget(key, ClientInfo.INFO.getValue()), ClientData.class);
+                            RedisIOClient redisIOClient = new RedisIOClient(redisClient);
+                            redisIOClient.setClientData(clientData);
+                            connectListener.onConnect(redisIOClient);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
