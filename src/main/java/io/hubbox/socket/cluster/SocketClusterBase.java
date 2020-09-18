@@ -1,33 +1,33 @@
-package io.hubbox.socket;
+package io.hubbox.socket.cluster;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hubbox.exceptions.SendMessageException;
 import io.hubbox.listener.EventListener;
 import io.hubbox.listener.MessageListener;
-import io.hubbox.manager.ClientListenerManager;
 import io.hubbox.manager.MessageManager;
-import io.lettuce.core.RedisClient;
+import io.hubbox.manager.cluster.ClientClusterListenerManager;
 import io.lettuce.core.RedisConnectionException;
-import io.lettuce.core.api.sync.RedisCommands;
-import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
-import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
+import io.lettuce.core.cluster.RedisClusterClient;
+import io.lettuce.core.cluster.api.sync.RedisClusterCommands;
+import io.lettuce.core.cluster.pubsub.StatefulRedisClusterPubSubConnection;
+import io.lettuce.core.cluster.pubsub.api.sync.RedisClusterPubSubCommands;
+import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
+ * @author fatih
  */
-public abstract class SocketBase implements MessageListener {
+public abstract class SocketClusterBase implements MessageListener {
+    private Map<String, ClientClusterListenerManager> managerMap;
+    RedisClusterClient redisClient;
+    RedisClusterPubSubCommands<String, String> publisherCommand;
+    @Getter
+    RedisClusterCommands<String, String> commands;
 
-
-    private Map<String, ClientListenerManager> managerMap;
-    private RedisClient redisClient;
-    RedisPubSubCommands<String, String> publisherCommand;
-    RedisCommands<String, String> commands;
-
-    SocketBase(RedisClient redisClient) {
+    SocketClusterBase(RedisClusterClient redisClient) {
         try {
             this.redisClient = redisClient;
             this.managerMap = new HashMap<>();
@@ -39,15 +39,17 @@ public abstract class SocketBase implements MessageListener {
     }
 
     @Override
-    public void addEventListener(String channel, EventListener eventListener) {
+    public void addEventListener(EventListener eventListener, String... channels) {
         try {
             MessageManager messageManager = new MessageManager(eventListener);
-            StatefulRedisPubSubConnection<String, String> pubSubListener = redisClient.connectPubSub();
+            StatefulRedisClusterPubSubConnection<String, String> pubSubListener = redisClient.connectPubSub();
 
             pubSubListener.addListener(messageManager);
-            pubSubListener.sync().subscribe(channel);
-
-            managerMap.put(channel, new ClientListenerManager(messageManager, pubSubListener));
+            pubSubListener.sync().subscribe(channels);
+            ClientClusterListenerManager clientListenerManager = new ClientClusterListenerManager(messageManager, pubSubListener);
+            for (String channel : channels) {
+                managerMap.put(channel, clientListenerManager);
+            }
 
         } catch (NullPointerException e) {
             e.printStackTrace();
@@ -58,8 +60,11 @@ public abstract class SocketBase implements MessageListener {
 
     @Override
     public void removeEventListener(String channel) {
-        managerMap.get(channel).removeEvent(channel);
-        managerMap.remove(channel);
+        if (managerMap.get(channel) != null) {
+            managerMap.get(channel).removeEvent(channel);
+            managerMap.remove(channel);
+        }
+
     }
 
     @Override
@@ -80,11 +85,10 @@ public abstract class SocketBase implements MessageListener {
     }
 
     @Override
-    public void sendMessage(String channel, String message) throws SendMessageException {
+    public void sendMessage(String channel, String message) {
         publisherCommand.publish(channel, message);
 
     }
-
 
     public abstract void start();
 }

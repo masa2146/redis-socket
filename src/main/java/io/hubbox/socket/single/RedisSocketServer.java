@@ -1,11 +1,12 @@
-package io.hubbox.socket;
+package io.hubbox.socket.single;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.hubbox.client.RedisIOClient;
+import io.hubbox.client.ClientData;
 import io.hubbox.listener.ClientConnectListener;
 import io.hubbox.listener.ClientDisconnectListener;
 import io.hubbox.listener.ClientListener;
-import io.hubbox.manager.ServerConnectionManager;
+import io.hubbox.manager.single.ServerConnectionManager;
+import io.hubbox.socket.SocketInfo;
 import io.lettuce.core.RedisClient;
 
 import java.io.IOException;
@@ -17,7 +18,7 @@ public class RedisSocketServer extends SocketBase implements ClientListener {
 
 
     private ServerConnectionManager connectionManager;
-    private List<RedisIOClient> allClients;
+    private List<ClientData> allClients;
 
     public RedisSocketServer(RedisClient redisClient) {
         super(redisClient);
@@ -28,7 +29,11 @@ public class RedisSocketServer extends SocketBase implements ClientListener {
     @Override
     public void addConnectListener(ClientConnectListener connectListener) {
         connectionManager.listenConnectedClients(connectListener);
-
+        try {
+            connectionManager.manualConnectionControl(connectListener);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -36,14 +41,15 @@ public class RedisSocketServer extends SocketBase implements ClientListener {
         connectionManager.listenDisconnectClients(disconnectListener);
     }
 
-    public List<RedisIOClient> getAllClients() {
+    public List<ClientData> getAllClients() {
+        allClients.clear();
         Map<String, String> hgetall = commands.hgetall(SocketInfo.ALL_CLIENT.getValue());
         ObjectMapper mapper = new ObjectMapper();
         hgetall.forEach((key, value) -> {
             try {
-                allClients.add(mapper.readValue(value, RedisIOClient.class));
+                allClients.add(mapper.readValue(value, ClientData.class));
             } catch (IOException e) {
-                System.out.println("Somethings went wrong when get all clients");
+                System.out.println("Somethings went wrong when get all clients " + e.getMessage());
             }
         });
         return allClients;

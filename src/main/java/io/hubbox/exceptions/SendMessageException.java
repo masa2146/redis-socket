@@ -1,9 +1,9 @@
 package io.hubbox.exceptions;
 
 /**
- * @author Fatih
+ * @author fatih
  */
-public class SendMessageException extends Exception {
+public class SendMessageException extends Exception{
     public SendMessageException(String message){
         super(message);
     }

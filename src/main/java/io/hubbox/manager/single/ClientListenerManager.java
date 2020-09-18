@@ -1,5 +1,6 @@
-package io.hubbox.manager;
+package io.hubbox.manager.single;
 
+import io.hubbox.manager.MessageManager;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
@@ -16,8 +17,8 @@ public class ClientListenerManager {
     private StatefulRedisPubSubConnection<String, String> pubSubConnection;
 
     public void removeEvent(String channel) {
-        pubSubConnection.sync().unsubscribe(channel);
-        pubSubConnection.removeListener(messageManager);
+        this.pubSubConnection.sync().unsubscribe(channel);
+        this.pubSubConnection.removeListener(this.messageManager);
     }
 
 }

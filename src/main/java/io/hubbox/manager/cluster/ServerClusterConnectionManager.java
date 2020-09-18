@@ -1,29 +1,41 @@
-package io.hubbox.manager;
+package io.hubbox.manager.cluster;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.hubbox.client.ClientData;
 import io.hubbox.client.RedisIOClient;
 import io.hubbox.listener.ClientConnectListener;
 import io.hubbox.listener.ClientDisconnectListener;
+import io.hubbox.manager.ClientInfo;
 import io.hubbox.socket.SocketInfo;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisException;
 import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.cluster.RedisClusterClient;
+import io.lettuce.core.cluster.api.sync.RedisClusterCommands;
+import io.lettuce.core.cluster.pubsub.StatefulRedisClusterPubSubConnection;
 import io.lettuce.core.pubsub.RedisPubSubListener;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 
 import java.io.IOException;
 
-public class ServerConnectionManager {
+/**
+ * @author fatih
+ */
+public class ServerClusterConnectionManager {
 
-    private RedisCommands<String, String> commands;
-    private StatefulRedisPubSubConnection<String, String> subConnection;
+    private RedisClusterClient redisClient;
+    private RedisClusterCommands<String, String> commands;
+    private StatefulRedisClusterPubSubConnection<String, String> subConnection;
+    private StatefulRedisClusterPubSubConnection<String, String> pubConnection;
     private ClientDisconnectListener disconnectListener;
 
     private ObjectMapper objectMapper;
 
-    public ServerConnectionManager(RedisClient redisClient, RedisCommands<String, String> commands) {
+    public ServerClusterConnectionManager(RedisClusterClient redisClient, RedisClusterCommands<String, String> commands) {
         this.commands = commands;
+        this.redisClient = redisClient;
         subConnection = redisClient.connectPubSub();
+        pubConnection = redisClient.connectPubSub();
         objectMapper = new ObjectMapper();
     }
 
@@ -37,9 +49,12 @@ public class ServerConnectionManager {
             @Override
             public void message(String channel, String message) {
                 try {
-                    RedisIOClient redisIOClient = objectMapper.readValue(message, RedisIOClient.class);
+                    ClientData clientData = objectMapper.readValue(message, ClientData.class);
+                    RedisIOClient redisIOClient = new RedisIOClient(redisClient);
+                    redisIOClient.setClientData(clientData);
                     connectListener.onConnect(redisIOClient);
                     commands.hset(SocketInfo.ALL_CLIENT.getValue(), redisIOClient.getClientData().getSessionId(), message);
+                    pubConnection.sync().publish(SocketInfo.EVENT_CONNECTED.name() + "/" + redisIOClient.getClientData().getSessionId(), "You connected!");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -71,12 +86,29 @@ public class ServerConnectionManager {
             }
         });
 
-        subConnection.sync().subscribe(SocketInfo.EVENT_CONNECTED.getValue());
+        subConnection.sync().subscribe(SocketInfo.EVENT_CONNECTED.name());
         threadClientStatus();
     }
 
     public void listenDisconnectClients(ClientDisconnectListener disconnectListener) {
         this.disconnectListener = disconnectListener;
+    }
+
+    public void manualConnectionControl(ClientConnectListener connectListener) throws IOException {
+        for (String key : commands.keys("*")){
+            if (commands.hgetall(key) != null){
+                if (commands.hget(key, ClientInfo.STATUS.getValue()) != null){
+                    if (commands.hget(key, ClientInfo.STATUS.getValue()).equals(ClientInfo.OK.getValue())){
+                        if (commands.hget(key, ClientInfo.INFO.getValue()) != null){
+                            ClientData clientData = objectMapper.readValue(commands.hget(key, ClientInfo.INFO.getValue()), ClientData.class);
+                            RedisIOClient redisIOClient = new RedisIOClient(redisClient);
+                            redisIOClient.setClientData(clientData);
+                            connectListener.onConnect(redisIOClient);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -107,14 +139,22 @@ public class ServerConnectionManager {
     private synchronized void statusControl() throws IOException {
         try {
             for (String key : commands.keys("*")) {
-                if (commands.hget(key, ClientInfo.STATUS.getValue()).equals(ClientInfo.NOT_OK.getValue())) {
-                    RedisIOClient redisIOClient = objectMapper.readValue(commands.hget(key, ClientInfo.INFO.getValue()), RedisIOClient.class);
-                    commands.hdel(key, ClientInfo.STATUS.getValue(), ClientInfo.INFO.getValue());
-                    commands.del(key);
-                    commands.hdel(SocketInfo.ALL_CLIENT.getValue(), redisIOClient.getClientData().getSessionId());
-                    disconnectListener.onDisconnect(redisIOClient);
-                } else {
-                    commands.hset(key, ClientInfo.STATUS.getValue(), ClientInfo.NOT_OK.getValue());
+                if (commands.hgetall(key) != null) {
+                    if (commands.hget(key, ClientInfo.STATUS.getValue()) != null) {
+                        if (commands.hget(key, ClientInfo.STATUS.getValue()).equals(ClientInfo.NOT_OK.getValue())) {
+                            if (commands.hget(key, ClientInfo.INFO.getValue()) != null) {
+                                ClientData clientData = objectMapper.readValue(commands.hget(key, ClientInfo.INFO.getValue()), ClientData.class);
+                                RedisIOClient redisIOClient = new RedisIOClient(redisClient);
+                                redisIOClient.setClientData(clientData);
+                                disconnectListener.onDisconnect(redisIOClient);
+                            }
+                            commands.hdel(key, ClientInfo.STATUS.getValue(), ClientInfo.INFO.getValue());
+                            commands.hdel(SocketInfo.ALL_CLIENT.getValue(), key);
+//                            commands.del(key);
+                        } else {
+                            commands.hset(key, ClientInfo.STATUS.getValue(), ClientInfo.NOT_OK.getValue());
+                        }
+                    }
                 }
             }
         } catch (RedisException e) {
@@ -122,5 +162,4 @@ public class ServerConnectionManager {
             e.printStackTrace();
         }
     }
-
 }

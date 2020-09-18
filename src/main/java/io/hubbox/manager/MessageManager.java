@@ -18,7 +18,7 @@ public class MessageManager implements RedisPubSubListener<String, String> {
 
     @Override
     public void message(String s, String s2) {
-        eventListener.onMessage(s, s2);
+        this.eventListener.onMessage(s, s2);
 
     }
 
