@@ -226,7 +226,7 @@ public class SocketClientTest {
             Scanner scanner = new Scanner(System.in);
             scanner.nextLine();
             try {
-                client.sendMessage("asd", "asd");
+                client.sendMessage("channel1", "message");
             } catch (SendMessageException e) {
                 e.printStackTrace();
             }
