@@ -1,4 +1,4 @@
-package io.blt.socket.cluster;
+package io.blt.socket.single;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -6,27 +6,22 @@ import io.blt.client.RedisIOClient;
 import io.blt.listener.EventListener;
 import io.blt.listener.ServerConnectListener;
 import io.blt.listener.ServerDisconnectListener;
-import io.blt.listener.ServerListener;
 import io.blt.manager.ClientInfo;
-import io.blt.manager.cluster.ClientClusterConnectionManager;
-import io.lettuce.core.cluster.RedisClusterClient;
-import lombok.Getter;
+import io.blt.manager.single.ClientConnectionManager;
+import io.blt.socket.RedisClientSocket;
+import io.lettuce.core.RedisClient;
 
-/**
- * @author fatih
- */
-public class RedisClusterSocketClient extends SocketClusterBase implements ServerListener {
+public class RedisSingleClientSocket extends SingleBaseSocket implements RedisClientSocket {
 
-    private ClientClusterConnectionManager connectionManager;
-    @Getter
+    private ClientConnectionManager connectionManager;
     private RedisIOClient redisIOClient;
     private ObjectMapper mapper;
 
-    public RedisClusterSocketClient(RedisClusterClient redisClient) {
+    public RedisSingleClientSocket(RedisClient redisClient) {
         super(redisClient);
         redisIOClient = new RedisIOClient(redisClient);
         mapper = new ObjectMapper();
-        connectionManager = new ClientClusterConnectionManager(redisClient, redisIOClient, publisherCommand);
+        connectionManager = new ClientConnectionManager(redisClient, redisIOClient, publisherCommand);
     }
 
     @Override
@@ -43,8 +38,14 @@ public class RedisClusterSocketClient extends SocketClusterBase implements Serve
         connectionManager.checkDisconnectedListener(disconnectListener);
     }
 
+    @Override
     public void addSelfMessageListener(EventListener eventListener) {
         redisIOClient.addMessageListener(eventListener);
+    }
+
+    @Override
+    public RedisIOClient getRedisIoClient() {
+        return redisIOClient;
     }
 
     @Override

@@ -1,33 +1,35 @@
-package io.blt.socket.cluster;
+package io.blt.socket.single;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.blt.exceptions.SendMessageException;
 import io.blt.listener.EventListener;
 import io.blt.listener.MessageListener;
+import io.blt.manager.single.ClientListenerManager;
 import io.blt.manager.MessageManager;
-import io.blt.manager.cluster.ClientClusterListenerManager;
+import io.blt.socket.RedisServerSocket;
+import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisConnectionException;
-import io.lettuce.core.cluster.RedisClusterClient;
-import io.lettuce.core.cluster.api.sync.RedisClusterCommands;
-import io.lettuce.core.cluster.pubsub.StatefulRedisClusterPubSubConnection;
-import io.lettuce.core.cluster.pubsub.api.sync.RedisClusterPubSubCommands;
+import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
+import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
 import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author fatih
+ *
  */
-public abstract class SocketClusterBase implements MessageListener {
-    private Map<String, ClientClusterListenerManager> managerMap;
-    RedisClusterClient redisClient;
-    RedisClusterPubSubCommands<String, String> publisherCommand;
-    @Getter
-    RedisClusterCommands<String, String> commands;
+public abstract class SingleBaseSocket implements MessageListener {
 
-    SocketClusterBase(RedisClusterClient redisClient) {
+
+    private Map<String, ClientListenerManager> managerMap;
+    RedisClient redisClient;
+    RedisPubSubCommands<String, String> publisherCommand;
+    RedisCommands<String, String> commands;
+
+    SingleBaseSocket(RedisClient redisClient) {
         try {
             this.redisClient = redisClient;
             this.managerMap = new HashMap<>();
@@ -42,11 +44,11 @@ public abstract class SocketClusterBase implements MessageListener {
     public void addEventListener(EventListener eventListener, String... channels) {
         try {
             MessageManager messageManager = new MessageManager(eventListener);
-            StatefulRedisClusterPubSubConnection<String, String> pubSubListener = redisClient.connectPubSub();
+            StatefulRedisPubSubConnection<String, String> pubSubListener = redisClient.connectPubSub();
 
             pubSubListener.addListener(messageManager);
             pubSubListener.sync().subscribe(channels);
-            ClientClusterListenerManager clientListenerManager = new ClientClusterListenerManager(messageManager, pubSubListener);
+            ClientListenerManager clientListenerManager = new ClientListenerManager(messageManager, pubSubListener);
             for (String channel : channels) {
                 managerMap.put(channel, clientListenerManager);
             }

@@ -1,9 +1,11 @@
 package io.blt.test.single;
 
+import io.blt.exceptions.SendMessageException;
 import io.blt.listener.EventListener;
 import io.blt.listener.ServerConnectListener;
 import io.blt.listener.ServerDisconnectListener;
-import io.blt.socket.single.RedisSocketClient;
+import io.blt.socket.RedisClientSocket;
+import io.blt.socket.single.RedisSingleClientSocket;
 import io.lettuce.core.RedisClient;
 
 import java.util.Scanner;
@@ -11,7 +13,7 @@ import java.util.Scanner;
 public class SocketClientTest {
     public static void main(String[] args) {
         RedisClient redisClient = RedisClient.create("redis://192.168.143.192:6380");
-        RedisSocketClient client = new RedisSocketClient(redisClient);
+        RedisClientSocket client = new RedisSingleClientSocket(redisClient);
 
 
         client.addConnectListener(new ServerConnectListener() {
@@ -48,7 +50,11 @@ public class SocketClientTest {
             System.out.println("Send Message...");
             Scanner scanner = new Scanner(System.in);
             scanner.nextLine();
-            client.sendMessage("asd", "asd");
+            try {
+                client.sendMessage("asd", "asd");
+            } catch (SendMessageException e) {
+                e.printStackTrace();
+            }
 
         }).start();
     }

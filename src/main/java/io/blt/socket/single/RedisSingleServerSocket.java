@@ -4,23 +4,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.blt.client.ClientData;
 import io.blt.listener.ClientConnectListener;
 import io.blt.listener.ClientDisconnectListener;
-import io.blt.listener.ClientListener;
 import io.blt.manager.single.ServerConnectionManager;
+import io.blt.socket.RedisServerSocket;
 import io.blt.socket.SocketInfo;
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.sync.BaseRedisCommands;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class RedisSocketServer extends SocketBase implements ClientListener {
+public class RedisSingleServerSocket extends SingleBaseSocket implements RedisServerSocket {
 
 
     private ServerConnectionManager connectionManager;
     private List<ClientData> allClients;
 
-    public RedisSocketServer(RedisClient redisClient) {
+    public RedisSingleServerSocket(RedisClient redisClient) {
         super(redisClient);
         connectionManager = new ServerConnectionManager(redisClient, commands);
         allClients = new ArrayList<>();
@@ -55,6 +56,10 @@ public class RedisSocketServer extends SocketBase implements ClientListener {
         return allClients;
     }
 
+    @Override
+    public BaseRedisCommands<String, String> getCommands() {
+        return commands;
+    }
 
     @Override
     public void start() {

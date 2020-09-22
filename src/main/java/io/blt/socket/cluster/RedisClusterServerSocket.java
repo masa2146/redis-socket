@@ -6,7 +6,10 @@ import io.blt.listener.ClientConnectListener;
 import io.blt.listener.ClientDisconnectListener;
 import io.blt.listener.ClientListener;
 import io.blt.manager.cluster.ServerClusterConnectionManager;
+import io.blt.socket.RedisServerSocket;
 import io.blt.socket.SocketInfo;
+import io.lettuce.core.api.sync.BaseRedisCommands;
+import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.cluster.RedisClusterClient;
 
 import java.io.IOException;
@@ -17,12 +20,12 @@ import java.util.Map;
 /**
  * @author fatih
  */
-public class RedisClusterSocketServer extends SocketClusterBase implements ClientListener {
+public class RedisClusterServerSocket extends ClusterBaseSocket implements RedisServerSocket {
 
     private ServerClusterConnectionManager connectionManager;
     private List<ClientData> allClients;
 
-    public RedisClusterSocketServer(RedisClusterClient redisClient) {
+    public RedisClusterServerSocket(RedisClusterClient redisClient) {
         super(redisClient);
         connectionManager = new ServerClusterConnectionManager(redisClient, commands);
         allClients = new ArrayList<>();
@@ -57,6 +60,11 @@ public class RedisClusterSocketServer extends SocketClusterBase implements Clien
         return allClients;
     }
 
+
+    @Override
+    public BaseRedisCommands<String, String> getCommands() {
+        return commands;
+    }
 
     @Override
     public void start() {

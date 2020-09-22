@@ -3,7 +3,7 @@ package io.blt.test.cluster;
 import io.blt.listener.EventListener;
 import io.blt.listener.ServerConnectListener;
 import io.blt.listener.ServerDisconnectListener;
-import io.blt.socket.cluster.RedisClusterSocketClient;
+import io.blt.socket.cluster.RedisClusterClientSocket;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.cluster.RedisClusterClient;
 
@@ -20,7 +20,7 @@ public class SocketClusterClientTest {
         RedisURI node2 = RedisURI.create("192.168.143.193", 6379);
         RedisURI node3 = RedisURI.create("192.168.143.194", 6379);
         RedisClusterClient redisClient = RedisClusterClient.create(Arrays.asList(node1, node2, node3));
-        RedisClusterSocketClient client = new RedisClusterSocketClient(redisClient);
+        RedisClusterClientSocket client = new RedisClusterClientSocket(redisClient);
 
 
         client.addConnectListener(new ServerConnectListener() {
