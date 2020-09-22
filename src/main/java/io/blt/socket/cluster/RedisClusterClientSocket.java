@@ -10,7 +10,7 @@ import io.blt.manager.ClientInfo;
 import io.blt.manager.cluster.ClientClusterConnectionManager;
 import io.blt.socket.RedisClientSocket;
 import io.lettuce.core.cluster.RedisClusterClient;
-import lombok.Getter;
+import io.lettuce.core.cluster.api.sync.RedisClusterCommands;
 
 /**
  * @author fatih
@@ -47,8 +47,13 @@ public class RedisClusterClientSocket extends ClusterBaseSocket implements Redis
     }
 
     @Override
-    public RedisIOClient getRedisIoClient() {
+    public RedisIOClient getRedisIOClient() {
         return redisIOClient;
+    }
+
+    @Override
+    public RedisClusterCommands<String, String> getCommands() {
+        return commands;
     }
 
     @Override

@@ -27,19 +27,9 @@ public class SocketServerTest {
 
         });
 
-        server.addDisconnectedListener(new ClientDisconnectListener() {
-            @Override
-            public void onDisconnect(RedisIOClient client) {
-                System.out.println("Disconnected Client: " + client.getClientData().getSessionId());
-            }
-        });
+        server.addDisconnectedListener(client -> System.out.println("Disconnected Client: " + client.getClientData().getSessionId()));
 
-        server.addEventListener(new EventListener() {
-            @Override
-            public void onMessage(String channel, String message) {
-                System.out.println("SERVER RECEIVED THE MESSAGE: " + message);
-            }
-        }, "message");
+        server.addEventListener((channel, message) -> System.out.println("SERVER RECEIVED THE MESSAGE: " + message), "message");
 
 
         new Thread(() -> {
@@ -47,7 +37,7 @@ public class SocketServerTest {
             Scanner scanner = new Scanner(System.in);
             scanner.nextLine();
             try {
-                server.sendMessage("asd", "asd");
+                server.sendMessage("channel1", "message");
             } catch (SendMessageException e) {
                 e.printStackTrace();
             }

@@ -4,13 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.blt.client.ClientData;
 import io.blt.listener.ClientConnectListener;
 import io.blt.listener.ClientDisconnectListener;
-import io.blt.listener.ClientListener;
 import io.blt.manager.cluster.ServerClusterConnectionManager;
 import io.blt.socket.RedisServerSocket;
 import io.blt.socket.SocketInfo;
-import io.lettuce.core.api.sync.BaseRedisCommands;
-import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.cluster.RedisClusterClient;
+import io.lettuce.core.cluster.api.sync.RedisClusterCommands;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,6 +44,7 @@ public class RedisClusterServerSocket extends ClusterBaseSocket implements Redis
         connectionManager.listenDisconnectClients(disconnectListener);
     }
 
+    @Override
     public List<ClientData> getAllClients() {
         allClients.clear();
         Map<String, String> hgetall = commands.hgetall(SocketInfo.ALL_CLIENT.getValue());
@@ -62,7 +61,7 @@ public class RedisClusterServerSocket extends ClusterBaseSocket implements Redis
 
 
     @Override
-    public BaseRedisCommands<String, String> getCommands() {
+    public RedisClusterCommands<String, String> getCommands() {
         return commands;
     }
 
@@ -70,6 +69,7 @@ public class RedisClusterServerSocket extends ClusterBaseSocket implements Redis
     public void start() {
         new Thread(() -> {
             while (true) {
+                // PASS
             }
         }).start();
     }

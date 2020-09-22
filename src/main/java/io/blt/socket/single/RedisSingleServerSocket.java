@@ -8,7 +8,7 @@ import io.blt.manager.single.ServerConnectionManager;
 import io.blt.socket.RedisServerSocket;
 import io.blt.socket.SocketInfo;
 import io.lettuce.core.RedisClient;
-import io.lettuce.core.api.sync.BaseRedisCommands;
+import io.lettuce.core.cluster.api.sync.RedisClusterCommands;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,6 +42,7 @@ public class RedisSingleServerSocket extends SingleBaseSocket implements RedisSe
         connectionManager.listenDisconnectClients(disconnectListener);
     }
 
+    @Override
     public List<ClientData> getAllClients() {
         allClients.clear();
         Map<String, String> hgetall = commands.hgetall(SocketInfo.ALL_CLIENT.getValue());
@@ -57,7 +58,7 @@ public class RedisSingleServerSocket extends SingleBaseSocket implements RedisSe
     }
 
     @Override
-    public BaseRedisCommands<String, String> getCommands() {
+    public RedisClusterCommands<String, String> getCommands() {
         return commands;
     }
 

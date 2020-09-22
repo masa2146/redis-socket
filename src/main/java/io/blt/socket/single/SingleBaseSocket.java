@@ -5,15 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.blt.exceptions.SendMessageException;
 import io.blt.listener.EventListener;
 import io.blt.listener.MessageListener;
-import io.blt.manager.single.ClientListenerManager;
 import io.blt.manager.MessageManager;
-import io.blt.socket.RedisServerSocket;
+import io.blt.manager.single.ClientListenerManager;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisConnectionException;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
-import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
