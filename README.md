@@ -3,6 +3,16 @@
 ## Başlangıç
 Redis socket, Redis yüklü cihazlar arasında veri haberleşmesini kolaylaştırmak için geliştirilmiştir.
 
+## Bağımlılıklar
+
+```xml
+<dependency>
+    <groupId>io.lettuce</groupId>
+    <artifactId>lettuce-core</artifactId>
+    <version>5.1.8.RELEASE</version>
+</dependency>
+```
+
 ## Nasıl Çalışır?
 **Redis Socket** hem sunucu hem de istemci olarak kullanılabilir. Redis üzerinden *PubSub* metotlarını kullanalarak
 mesaj iletimini ve gönderilen mesajın okunması işlemini gerçekleştirir. 

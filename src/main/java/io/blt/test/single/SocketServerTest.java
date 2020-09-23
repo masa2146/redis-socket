@@ -1,9 +1,6 @@
 package io.blt.test.single;
 
-import io.blt.client.RedisIOClient;
 import io.blt.exceptions.SendMessageException;
-import io.blt.listener.ClientDisconnectListener;
-import io.blt.listener.EventListener;
 import io.blt.socket.RedisServerSocket;
 import io.blt.socket.single.RedisSingleServerSocket;
 import io.lettuce.core.RedisClient;
