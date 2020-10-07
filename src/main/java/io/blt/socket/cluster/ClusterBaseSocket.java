@@ -7,13 +7,11 @@ import io.blt.listener.EventListener;
 import io.blt.listener.MessageListener;
 import io.blt.manager.MessageManager;
 import io.blt.manager.cluster.ClientClusterListenerManager;
-import io.blt.socket.RedisServerSocket;
 import io.lettuce.core.RedisConnectionException;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.api.sync.RedisClusterCommands;
 import io.lettuce.core.cluster.pubsub.StatefulRedisClusterPubSubConnection;
 import io.lettuce.core.cluster.pubsub.api.sync.RedisClusterPubSubCommands;
-import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
