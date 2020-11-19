@@ -50,7 +50,7 @@ public class ServerConnectionManager {
                     commands.hset(SocketInfo.ALL_CLIENT.getValue(), redisIOClient.getClientData().getSessionId(), message);
                     pubConnection.sync().publish(SocketInfo.EVENT_CONNECTED.name() + "/" + redisIOClient.getClientData().getSessionId(), "You connected!");
                 } catch (IOException e) {
-                    e.printStackTrace();
+//                    e.printStackTrace();
                 }
             }
 
@@ -152,8 +152,8 @@ public class ServerConnectionManager {
                 }
             }
         } catch (RedisException e) {
-            System.out.println("Error on control the status connection ");
-            e.printStackTrace();
+//            System.out.println("Error on control the status connection ");
+//            e.printStackTrace();
         }
     }
 }

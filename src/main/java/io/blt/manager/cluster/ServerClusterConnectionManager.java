@@ -155,8 +155,8 @@ public class ServerClusterConnectionManager {
                 }
             }
         } catch (RedisException e) {
-            System.out.println("Error on control the status connection ");
-            e.printStackTrace();
+//            System.out.println("Error on control the status connection ");
+//            e.printStackTrace();
         }
     }
 }

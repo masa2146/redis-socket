@@ -5,8 +5,11 @@ import io.blt.listener.ClientDisconnectListener;
 import io.blt.listener.EventListener;
 import io.blt.socket.cluster.RedisClusterServerSocket;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.cluster.ClusterClientOptions;
+import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
 import io.lettuce.core.cluster.RedisClusterClient;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -16,10 +19,22 @@ import java.util.Scanner;
 public class SocketClusterServerTest {
 
     public static void main(String[] args) {
-        RedisURI node1 = RedisURI.create("192.168.143.192", 6379);
-        RedisURI node2 = RedisURI.create("192.168.143.193", 6379);
-        RedisURI node3 = RedisURI.create("192.168.143.194", 6379);
+        RedisURI node1 = RedisURI.create("172.16.255.192", 6379);
+        RedisURI node2 = RedisURI.create("172.16.255.193", 6379);
+        RedisURI node3 = RedisURI.create("172.16.255.194", 6379);
         RedisClusterClient redisClient = RedisClusterClient.create(Arrays.asList(node1, node2, node3));
+
+        final ClusterTopologyRefreshOptions refreshOptions =
+                ClusterTopologyRefreshOptions.builder()
+                        .enableAllAdaptiveRefreshTriggers()
+                        .adaptiveRefreshTriggersTimeout(Duration.ofSeconds(2))
+                        .refreshTriggersReconnectAttempts(2)
+                        .enablePeriodicRefresh(Duration.ofMinutes(10))
+                        .build();
+        redisClient.setDefaultTimeout(Duration.ofSeconds(10));
+        redisClient.setOptions(ClusterClientOptions.builder().topologyRefreshOptions(refreshOptions).build());
+
+        redisClient.reloadPartitions();
         RedisClusterServerSocket server = new RedisClusterServerSocket(redisClient);
 
         server.start();

@@ -33,7 +33,7 @@ public class RedisSingleServerSocket extends SingleBaseSocket implements RedisSe
         try {
             connectionManager.manualConnectionControl(connectListener);
         } catch (IOException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
     }
 
