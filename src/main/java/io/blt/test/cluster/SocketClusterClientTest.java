@@ -16,9 +16,9 @@ import java.util.Scanner;
 public class SocketClusterClientTest {
 
     public static void main(String[] args) {
-        RedisURI node1 = RedisURI.create("192.168.143.192", 6379);
-        RedisURI node2 = RedisURI.create("192.168.143.193", 6379);
-        RedisURI node3 = RedisURI.create("192.168.143.194", 6379);
+        RedisURI node1 = RedisURI.create("172.16.255.192", 6379);
+        RedisURI node2 = RedisURI.create("172.16.255.193", 6379);
+        RedisURI node3 = RedisURI.create("172.16.255.194", 6379);
         RedisClusterClient redisClient = RedisClusterClient.create(Arrays.asList(node1, node2, node3));
         RedisClusterClientSocket client = new RedisClusterClientSocket(redisClient);
 
@@ -53,11 +53,19 @@ public class SocketClusterClientTest {
             }
         }, "marmara");
 
+        client.addEventListener(new EventListener() {
+            @Override
+            public void onMessage(String channel, String message) {
+                System.out.println("MESSAGE: " + message);
+            }
+        }, "asd");
+
         new Thread(() -> {
             System.out.println("Send Message...");
             Scanner scanner = new Scanner(System.in);
             scanner.nextLine();
-            client.sendMessage("asd", "asd");
+//            client.sendMessage("asd", "asd");
+
 
         }).start();
     }

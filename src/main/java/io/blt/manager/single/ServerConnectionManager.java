@@ -14,6 +14,9 @@ import io.lettuce.core.pubsub.RedisPubSubListener;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletionException;
 
 public class ServerConnectionManager {
 
@@ -82,6 +85,7 @@ public class ServerConnectionManager {
 
         subConnection.sync().subscribe(SocketInfo.EVENT_CONNECTED.name());
         threadClientStatus();
+
     }
 
     public void listenDisconnectClients(ClientDisconnectListener disconnectListener) {
@@ -89,18 +93,27 @@ public class ServerConnectionManager {
     }
 
     public void manualConnectionControl(ClientConnectListener connectListener) throws IOException {
-        for (String key : commands.keys("*")){
-            if (commands.hgetall(key) != null){
-                if (commands.hget(key, ClientInfo.STATUS.getValue()) != null){
-                    if (commands.hget(key, ClientInfo.STATUS.getValue()).equals(ClientInfo.OK.getValue())){
-                        if (commands.hget(key, ClientInfo.INFO.getValue()) != null){
-                            ClientData clientData = objectMapper.readValue(commands.hget(key, ClientInfo.INFO.getValue()), ClientData.class);
-                            RedisIOClient redisIOClient = new RedisIOClient(redisClient);
-                            redisIOClient.setClientData(clientData);
-                            connectListener.onConnect(redisIOClient);
+        List<String> keys = new ArrayList<>();
+        try {
+            commands.keys(keys::add, "*");
+        } catch (RedisException ignore) {
+        }
+
+        for (String key : keys) {
+            try {
+                if (commands.hgetall(key) != null) {
+                    if (commands.hget(key, ClientInfo.STATUS.getValue()) != null) {
+                        if (commands.hget(key, ClientInfo.STATUS.getValue()).equals(ClientInfo.OK.getValue())) {
+                            if (commands.hget(key, ClientInfo.INFO.getValue()) != null) {
+                                ClientData clientData = objectMapper.readValue(commands.hget(key, ClientInfo.INFO.getValue()), ClientData.class);
+                                RedisIOClient redisIOClient = new RedisIOClient(redisClient);
+                                redisIOClient.setClientData(clientData);
+                                connectListener.onConnect(redisIOClient);
+                            }
                         }
                     }
                 }
+            } catch (Exception ignore) {
             }
         }
     }
@@ -131,8 +144,13 @@ public class ServerConnectionManager {
      * It sets one(ClientInfo.OK) value to status field in the key on client side if client connected.
      */
     private synchronized void statusControl() throws IOException {
+        List<String> keys = new ArrayList<>();
         try {
-            for (String key : commands.keys("*")) {
+            commands.keys(keys::add, "*");
+        } catch (RedisException ignore) {
+        }
+        for (String key : keys) {
+            try {
                 if (commands.hgetall(key) != null) {
                     if (commands.hget(key, ClientInfo.STATUS.getValue()) != null) {
                         if (commands.hget(key, ClientInfo.STATUS.getValue()).equals(ClientInfo.NOT_OK.getValue())) {
@@ -150,10 +168,8 @@ public class ServerConnectionManager {
                         }
                     }
                 }
+            } catch (Exception ignore) {
             }
-        } catch (RedisException e) {
-//            System.out.println("Error on control the status connection ");
-//            e.printStackTrace();
         }
     }
 }

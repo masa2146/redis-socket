@@ -11,9 +11,12 @@ import io.lettuce.core.RedisException;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.cluster.api.sync.RedisClusterCommands;
 import io.lettuce.core.cluster.pubsub.StatefulRedisClusterPubSubConnection;
+import io.lettuce.core.output.KeyStreamingChannel;
 import io.lettuce.core.pubsub.RedisPubSubListener;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author fatih
@@ -42,6 +45,7 @@ public class ServerClusterConnectionManager {
      * Also this function client which  has been connected, add to hash set which is SocketInfo.ALL_CLIENT key
      */
     public void listenConnectedClients(ClientConnectListener connectListener) {
+        System.out.println("listenConnectedClients");
         subConnection.addListener(new RedisPubSubListener<String, String>() {
             @Override
             public void message(String channel, String message) {
@@ -83,27 +87,35 @@ public class ServerClusterConnectionManager {
             }
         });
 
-        subConnection.sync().subscribe(SocketInfo.EVENT_CONNECTED.name());
         threadClientStatus();
+        subConnection.sync().subscribe(SocketInfo.EVENT_CONNECTED.name());
     }
 
     public void listenDisconnectClients(ClientDisconnectListener disconnectListener) {
         this.disconnectListener = disconnectListener;
     }
 
-    public void manualConnectionControl(ClientConnectListener connectListener) throws IOException {
-        for (String key : commands.keys("*")){
-            if (commands.hgetall(key) != null){
-                if (commands.hget(key, ClientInfo.STATUS.getValue()) != null){
-                    if (commands.hget(key, ClientInfo.STATUS.getValue()).equals(ClientInfo.OK.getValue())){
-                        if (commands.hget(key, ClientInfo.INFO.getValue()) != null){
-                            ClientData clientData = objectMapper.readValue(commands.hget(key, ClientInfo.INFO.getValue()), ClientData.class);
-                            RedisIOClient redisIOClient = new RedisIOClient(redisClient);
-                            redisIOClient.setClientData(clientData);
-                            connectListener.onConnect(redisIOClient);
+    public void manualConnectionControl(ClientConnectListener connectListener) throws IOException, RedisException {
+        List<String> keys = new ArrayList<>();
+        try {
+            commands.keys(keys::add, "*");
+        } catch (RedisException ignore) {
+        }
+        for (String key : keys) {
+            try {
+                if (commands.hgetall(key) != null) {
+                    if (commands.hget(key, ClientInfo.STATUS.getValue()) != null) {
+                        if (commands.hget(key, ClientInfo.STATUS.getValue()).equals(ClientInfo.OK.getValue())) {
+                            if (commands.hget(key, ClientInfo.INFO.getValue()) != null) {
+                                ClientData clientData = objectMapper.readValue(commands.hget(key, ClientInfo.INFO.getValue()), ClientData.class);
+                                RedisIOClient redisIOClient = new RedisIOClient(redisClient);
+                                redisIOClient.setClientData(clientData);
+                                connectListener.onConnect(redisIOClient);
+                            }
                         }
                     }
                 }
+            } catch (Exception ignore) {
             }
         }
     }
@@ -134,8 +146,13 @@ public class ServerClusterConnectionManager {
      * It sets one(ClientInfo.OK) value to status field in the key on client side if client connected.
      */
     private synchronized void statusControl() throws IOException {
+        List<String> keys = new ArrayList<>();
         try {
-            for (String key : commands.keys("*")) {
+            commands.keys(keys::add, "*");
+        } catch (RedisException ignore) {
+        }
+        for (String key : keys) {
+            try {
                 if (commands.hgetall(key) != null) {
                     if (commands.hget(key, ClientInfo.STATUS.getValue()) != null) {
                         if (commands.hget(key, ClientInfo.STATUS.getValue()).equals(ClientInfo.NOT_OK.getValue())) {
@@ -153,10 +170,10 @@ public class ServerClusterConnectionManager {
                         }
                     }
                 }
-            }
-        } catch (RedisException e) {
+            } catch (Exception e) {
 //            System.out.println("Error on control the status connection ");
 //            e.printStackTrace();
+            }
         }
     }
 }

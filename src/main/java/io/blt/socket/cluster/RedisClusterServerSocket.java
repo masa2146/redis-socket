@@ -34,7 +34,7 @@ public class RedisClusterServerSocket extends ClusterBaseSocket implements Redis
         connectionManager.listenConnectedClients(connectListener);
         try {
             connectionManager.manualConnectionControl(connectListener);
-        } catch (IOException e) {
+        } catch (Exception e) {
 //            e.printStackTrace();
         }
     }
